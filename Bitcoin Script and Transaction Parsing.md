@@ -583,7 +583,7 @@ Note that by contrast to P2WPKH outputs, all the data for the script is included
 
 ## P2SH-P2WPKH outputs
 
-In a P2SH-P2WPKH output, the redeem script of a P2SH transaction is a P2WPKH output. The ScriptSig field contains the redeem script, while the witness field contains the digital signature and public key.
+In a P2SH-P2WPKH output, the redeem script of a P2SH transaction is the ScriptPubKey of a P2WPKH output understood as data. The ScriptSig field contains the redeem script, while the witness field contains the digital signature and public key.
 
 *ScriptPubKey*
 
