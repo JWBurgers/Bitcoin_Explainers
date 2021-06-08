@@ -676,6 +676,127 @@ A segwit node will recognize the OP_0 OP_PUSHBYTES_32 <32-bytes hash> pattern. I
 Notice that as with a P2SH-P2WPKH output, the data in the ScriptSig field is not malleable. It only contains an operation that pushes a 0 and a 32-byte hash of the witness script. None of the data components of the witness script can be altered without changing the meaning. Hence, the transaction ID is not malleable as a consequence of the data in the ScriptSig.
 
 
+## Taproot
+
+A **pay to taproot** (P2TR) output is marked by the OP_1 OP_PUSHBYTES_32 <32-byte witness program> pattern in the ScriptPubKey. This 32-byte witness program is a public key. So in total, a taproot ScriptPubKey is 34 bytes, just as a P2WSH output.  
+
+Bitcoin public keys are frequently indicated by 33 bytes. This includes 32 bytes for the public key’s x-value and one byte to signal whether the y-value is even (0x02) or odd (0x03). For a taproot output, the y-value is implicitly understood to always be even. This supports more efficient verification without really impacting security. 
+
+As seen from ScriptPubKey pattern, Taproot outputs are version 1 segwit transactions. As with version 0 segwit transactions, the unlocking conditions for UTXOs are placed into the witness component of a transaction, rather than in the ScriptSig. Furthermore, taproot outputs also employ the bech32 address standard. Each taproot address starts with “bc1p”, rather than “bc1q”, reflecting the new version number. 
+
+Just as the segregated witness soft fork, the taproot soft fork includes a number of upgrades, so it takes some effort to unpack. Lets start with the signatures for taproot outputs: the digital signature algorithm (DSA) scheme has been replaced by the Schnorr signature scheme.  
+
+The **Schnorr signature scheme** has various advantages over DSA. A key advantage is that it offers much better methods of **signature aggregation**. The idea of signature aggregation is as follows: 
+
+* You can add two or more component public keys to form a composite public key.
+* You can add the signatures over a message from the component public keys to form a composite signature.
+* The composite signature will be valid for the composite public key.
+
+While you could perform straightforward addition of public keys and signatures to get the result, this is insecure and subject to what is known as a **key cancellation attack**. A more secure, though also more complicated method of addition is known as **MuSig**.<sup>[9](#footnote9)</sup> Other addition schemes can also be used. While aggregation is possible with DSA signatures, it is much more complicated. 
+
+Importantly, the aggregation property ensures that multiple Schnorr signatures over a message can be validated through one composite signature. 
+
+Schnorr signatures also have various other advantages. These include provable security under less strict assumptions than ECDSA, non-malleability, and batch verification capabilities (that is, verification of multiple Schnorr signatures is relatively more efficient than individual verification). 
+
+A Schnorr signature is 64 bytes and no longer appears with DER encoding in the witness data. Without an additional SIGHASH flag, the SIGHASH_ALL flag is implied for hashing the data over which the signature is created. For any other SIGHASH flag an additional byte is added. So Schnorr signatures are generally 64 and sometimes 65 bytes. 
+
+This makes Schnorr signatures somewhat shorter than DER encoded DSA signatures. These are historically between 71 and 73 bytes, though they should always be 71 bytes in modern wallet implementations. 
+
+Further details of Schnorr signatures are provided in **BIP-340**.<sup>[10](#footnote10)</sup>  
+
+Next, the script organization logic of taproot outputs offers more flexibility. Specifically, any taproot output can consist of one or more locking scripts. If you want to spend a taproot UTXO, you have to select one of these locking scripts and provide a valid unlocking script. Any one of them will allow the UTXO to be spent. 
+
+To see the difference with the traditional organizational logic of Bitcoin locking scripts, consider a 2 out of 3 multisignature output using bare multisignature, P2SH, or P2WSH. In such outputs, the 2 out of 3 logic is included in a single script. With a taproot output, however, you can organize the logic into three 2 out of 2 multisignature scripts. You can choose any one of these 2 out of 2 multisignature scripts to unlock the UTXO. 
+
+The taproot upgrade also includes some substantial changes to Bitcoin’s Script language. The CHECKSIG and CHECKSIGVERIFY operations, for instance, now verify Schnorr signatures. In addition,  the CHECKMULTISG and CHECMULTISIGVERIFY operations have been disabled, and multisignature scripts use CHECKSIGADD instead. 
+
+These and other Script changes are captured in **BIP-342**.<sup>[11](#footnote11)</sup> The upgraded version of Script is often called **Tapscript**. 
+
+Any taproot output will have a default locking script. In principle, you can make a taproot output that just has this default locking script. Frequently, however, a taproot output will also have one or more alternative scripts. In fact, it may have quite a few. A taproot output might easily include, for example, fifty alternative scripts with a variety of complex locking conditions. 
+
+The default locking script encumbers the bitcoin to a public key for which a single Schnorr signature has to be provided. This public key is known as the **taproot output key** and is what is represented by the 32-byte witness program.
+
+In some cases, the taproot public key is just a regular public key corresponding to a single private key created by the owner. Frequently, however, it is a composite key, which also includes a commitment to alternative scripts. 
+
+Lets unpack how this is possible. To start, BIP-340 introduced a new hashing scheme for Bitcoin transactions called **tagged hashes**. These include identification tags in creating certain hash values which prevents reinterpretation of the hash in another context. Specifically, one creates a tagged hash has as follows:
+
+* TaggedHash (data) = SHA256 \[ SHA256(“Tag”) | SHA256(“Tag”) | data ]
+
+A composite taproot output key usually starts by creating two or more public keys. The public keys are then added to produce the **taproot internal key**. 
+
+In case of no alternative scripts, one can just use the taproot internal key as the taproot output key. Typically, however, information about one or more alternative scripts are used to alter the taproot internal key. This works as follows. 
+
+First, each alternative script in a taproot output is accompanied by a version and size indicator for the script, and tagged with the “TapLeaf” tag. Specifically, each **taproot leaf** is calculated in the following manner:
+
+* TapLeaf = TaggedHash (“TapLeaf”, version, size, script)
+
+Suppose that the taproot transaction only had one alternative script. In that case, the taproot leaf would be hashed together with the taproot internal key and multiplied with Bitcoin’s generator point to produce the **tweaked public key**. Specifically, the tweaked public key would be created as follows: 
+
+* Tweaked public key = TaggedHash (“TapTweak”, Taproot Internal Key, TapLeaf) * G
+
+The value produced by TaggedHash (“TapTweak”, Taproot Internal Key, TapLeaf) is known as the **taptweak**.
+
+Combining the tweaked public key with the taproot internal key produces the **taproot output key**. In other words, a commitment to the alternative script is included via public key aggregation to the taproot output key.  
+
+Now lets turn to the case in which there are two or more scripts. Each taproot leaf is hashed as before. All the leaves are, then, combined to form a tree-like structure to produce a merkle root. Every higher-level node is called a **tap branch**. Each tap branch to two nodes A and B is calculated as follows:
+
+TapBranch = TaggedHash (“TapBranch”, A, B)
+
+Eventually, the tree will converge to a single tap branch, the merkle root. The tree is also called the **tap tree**. The tweaked public key can now be calculated as follows (where the TapBranch in this case is that of the merkle root):
+
+* Tweaked public key = (“TapTweak”, P, TapBranch)
+
+The taproot output key can now be calculated in the same way as before by combining the taproot internal key with the tweaked public key. 
+
+The tree structure for the alternative scripts is sometimes called the **merkelized alternative script tree**. Originally, the general idea for these types of trees went by the name of **merkelized abstract syntax trees**. 
+
+It is important to emphasize that the taproot output key can commit to a great number of alternative scripts. As spending any of these scripts only requires revealing certain hash values along its merkle path, the tap tree scales really well.  
+
+Spending from a taproot output key that has made a commitment to alternative scripts can now happen in two ways. 
+
+First, in the default case, one participant in the construction can create a signature for the combination of their public key with the tweaked public key. Its private key is, namely, just tweaked in the same way as the public key. In addition, each other participant that helped compose the taproot internal key can create a signature. 
+
+Adding all these signatures—by a mechanism such as MuSig—gives a valid signature for the taproot output key. Anyone who sees this transaction has no idea of the complexity underlying taproot. As far as they are concerned, it might just have been a regular public key output without any alternative scripts. 
+
+Spending an alternative script path is a little more data intensive. It requires revealing the script, the relevant hashes in the tree, the internal taproot key, and proving the commitment of the script to the taproot output key. In addition, it requires an unlocking script.
+
+All this has substantial privacy and efficiency benefits for Bitcoin transactions, particularly when those involve complex scripts. 
+
+Suppose that you were making a multisignature output on your own. In that case, you could select the most likely signature pattern to create the taproot internal key. Signing the taproot output key directly now provides substantial privacy. No one can tell whether you spent from a regular single public key or a composite public key. In addition, no alternative script options have been revealed. 
+
+If you have to spend from one of the other scripts, perhaps due to losing one of your private keys, then you will lose some privacy. But you still only have to reveal only one of the leaves of the taptree. No one will be able to see what other valid scripts were in it. This is unlike a P2SH or P2WSH UTXO where all the relevant script has to be revealed upon spending.  
+
+Note also that taproot outputs make multisignature much more efficient, at least if you use the taproot output key directly. Instead of providing multiple signatures, multiple public keys, and a script as is needed for P2SH and P2WSH multisignature addresses, all you need is a single signature. As the public key is offered directly by the output, you also do not need to provide it in the witness field.  
+
+The same benefits can, of course, be extended to multisignature outputs with multiple parties. But taproot goes much further than just multisignature constructions. Typically, complex contracts involving multiple parties can be closed cooperatively by a signature from all the parties, regardless of the nature and complexity of the contract. This is precisely what the default spending option achieves. The alternative script options can, then, serve as fallback options for redundancy and/or keeping other parties honest. 
+
+Hence, as long as no one is attempting dishonesty, complex bitcoin contracts can always be closed by a single signature. This again offers substantial privacy and efficiency benefits. In case of dishonesty, one of the other scripts can be executed by some subset of the parties to the contract. This still offers some privacy and efficiency benefits over creating complex contracts with P2SH and P2WSH. 
+
+In sum, taproot is essentially the idea that a default multisignature key branch can be combined with alternative spending scripts in a single public key, and that spending occurs via a single signature in the default case. Presumably, the name “taproot” draws a comparison with the dominant root from which other roots sprout in plants.<sup>[12](#footnote12)</sup>
+
+Lets now look at the script validation a little more closely. 
+
+Any taproot UTXO that spends from the **key path** instead of the **script path** will have two elements in the witness field. The last element is known as an **annex**. It begins with the value 0x50. This annex is included for upgrades, but is ignored during the validation process. Having only one element left after the annex, a taproot compatible client will know to run the following script:
+
+* OP_PUSHBYTES_64
+* \<Schnorr signature> of 64 bytes
+* OP_PUSHBYTES_32
+* \<taproot output key> of Y bytes
+* OP_CHECKSIG
+
+Note that any client which does not support segwit will just end up with a public key on top of the stack (from the ScriptPubKey), which is seen as a valid transaction. Clients that only support segwit version 0 will also just end up with a public key on top of the stack and validate  the script.  
+
+Instead of spending from the key path, one can also spend from a script path. A taproot supporting client recognizes a script path spend if there are two or more items in the witness field after eliminating the annex. In this case, you will need to include a number of unlocking conditions in the witness field, the script, and the merkle path with the relevant hash values. 
+
+**TO DO: Work out example for script path spending**
+
+A notable difference between typical Bitcoin output types and taproot is that the latter directly contains a public key, not a hash value. Only the original P2PK and bare multisignature outputs directly included public keys into the ScriptPubKey.
+
+Putting a public key directly in the output saves on transaction size. It means that the public key does not have to be revealed within the witness field. Only a signature is sufficient. In addition, directly having the public key can make certain advanced protocols easier. 
+
+Some have criticized this architecture against not providing sufficient security against quantum-based computing attacks.<sup>[13](#footnote13)</sup> Overall, however, the sentiment on this seems to be that hashing provides weak protection and/or the quantum computing threat is far from materializing. 
+
+
 ## Notes
 
 <a name="footnote1">1</a>. Nick Szabo, “Smart contracts: Building blocks for digital markets”, 1996. 
@@ -693,3 +814,13 @@ Notice that as with a P2SH-P2WPKH output, the data in the ScriptSig field is not
 <a name="footnote7">7</a>. BIP-144, “Segregated witness (peer services)”, January 8 (2016), available at https://en.bitcoin.it/wiki/BIP_0144. 
 
 <a name="footnote8">8</a>. BIP-141, “Segregated witness (consensus layer)”, December 21 (2015), available at https://en.bitcoin.it/wiki/BIP_0141.
+
+<a name="footnote9">9</a>. Gregory Maxwell, Andrew Poelstra, Yannick Seurin, and Pieter Wuille, “Simple Schnorr multi-signatures with application to Bitcoin”, May 20 (2018), available at https://eprint.iacr.org/2018/068.pdf. 
+
+<a name="footnote10">10</a>. Pieter Wuille, Jonas Nick, and Tim Ruffing, "Schnorr signatures for secp256k1", January 19 (2020), available at https://en.bitcoin.it/wiki/BIP_0340.
+
+<a name="footnote11">11</a>. Pieter Wuille, Jonas Nick, and Anthony Towns, "Validation of taproot scripts", January 19 (2020), available at https://en.bitcoin.it/wiki/BIP_0342.
+
+<a name="footnote12">12</a>. The term was baptized by Gregory Maxwell, “Taproot: Privacy preserving switchable scripting”, January 23 (2018), Bitcoin-dev mailing list, available at https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-January/015614.html. I was unable to find a post in which he clarifies the name further. 
+
+<a name="footnote13">13</a>. See Marc Friedenbach, “Why I’m against taproot”, March 15 (2021), available at https://freicoin.substack.com/p/why-im-against-taproot.
