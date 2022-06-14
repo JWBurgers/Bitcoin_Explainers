@@ -21,7 +21,7 @@ A hardware wallet is typically used in conjunction with a software wallet instal
 
 A software wallet can be used without a hardware wallet. Storage of private keys and other unlocking data for UTXOs would, then, be on the wallet computer, another computer, a piece of paper, a metal plate, a USB stick, or some other type of storage medium. In some cases, one might use a hardware wallet just for creating locking scripts and the accompanying unlocking data, and then transferring the unlocking data to another medium such as a metal plate.    
 
-In a more narrow sense, these hardware devices and software applications actually have the ability to support the use of multiple bitcoin “wallets”. A wallet in this more narrow sense refers to certain collections of data that software and hardware wallets rely on. Within wallets in the narrow sense have clearly delineated structures, so that one hardware or software wallet can support multiple wallets. 
+In a more narrow sense, these hardware devices and software applications actually have the ability to support the use of multiple bitcoin “wallets”. A wallet in this more narrow sense refers to certain structured collections of data that software and hardware wallets rely on. Within wallets in the narrow sense have clearly delineated structures, so that one hardware or software wallet can support multiple wallets. 
 
 To illustrate, you can see the broad and narrow use of the term "wallet" in each of the following four sentences:
 
