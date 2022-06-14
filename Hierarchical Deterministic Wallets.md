@@ -17,7 +17,7 @@ The term “wallet” can have at least two distinct meanings in the Bitcoin eco
 
 In a broad sense, it can refer to a hardware wallet such as a Trezor or a Cold Card, or a software application such as Specter, Sparrow, or Electrum. A wallet is in this broad sense is just a basic tool that can, among other tasks, help you store private keys and other unlocking data for UTXOs, create transactions, track your funds, organize your funds, and connect to a node for sending and receiving transactions.
 
-A hardware wallet is always used in conjunction with a software wallet. Specifically, the primary purposes of a hardware wallet is to create locking scripts for UTXOs, safely store the accompanying unlocking data, and create the unlocking scripts for specific transactions. The other types of tasks mentioned above typically require connecting it to a software wallet. 
+A hardware wallet is typically used in conjunction with a software wallet installed on another device. The primary purpose hardware wallets is to create locking scripts for UTXOs, safely store the accompanying unlocking data, and create the unlocking scripts for specific transactions. The other types of tasks mentioned above are handled by the connected software wallet. 
 
 A software wallet can be used without a hardware wallet. Storage of private keys and other unlocking data for UTXOs would, then, be on the wallet computer, another computer, a piece of paper, a metal plate, a USB stick, or some other type of storage medium. In some cases, one might use a hardware wallet just for creating locking scripts and the accompanying unlocking data, and then transferring the unlocking data to another medium such as a metal plate.    
 
