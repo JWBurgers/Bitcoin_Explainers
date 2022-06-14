@@ -13,12 +13,24 @@ Hardware wallets are not rocket science. Knowing the details of how they work wi
 
 There is a lot of terminology that you should know when working with Bitcoin, particularly when it comes to hardware wallets. I’ll introduce that terminology as we move along. Here, I just want to start with a short note on the term “wallet”. 
 
-The term “wallet” can have at least two distinct meanings in the Bitcoin ecosystem. In a broad sense, it can refer to a hardware wallet such as a Trezor or a Cold Card, or a software application such as Specter, Sparrow, or Electrum. In a more narrow sense, these hardware devices and software applications actually have the ability to support the use of multiple bitcoin “wallets”. 
+The term “wallet” can have at least two distinct meanings in the Bitcoin ecosystem. 
 
-A wallet in this more narrow sense refers to certain collections of data, the main functions of which are to help you create receive addresses, track your funds, and potentially sign transactions (depending on the type of wallet). 
+In a broad sense, it can refer to a hardware wallet such as a Trezor or a Cold Card, or a software application such as Specter, Sparrow, or Electrum. A wallet is in this broad sense is just a basic tool that can, among other tasks, help you store private keys and other unlocking data for UTXOs, create transactions, track your funds, organize your funds, and connect to a node for sending and receiving transactions.
+
+A hardware wallet is always used in conjunction with a software wallet. Specifically, the primary purposes of a hardware wallet is to create locking scripts for UTXOs, safely store the accompanying unlocking data, and create the unlocking scripts for specific transactions. The other types of tasks mentioned above typically require connecting it to a software wallet. 
+
+A software wallet can be used without a hardware wallet. Storage of private keys and other unlocking data for UTXOs would, then, be on the wallet computer, another computer, a piece of paper, a metal plate, a USB stick, or some other type of storage medium. In some cases, one might use a hardware wallet just for creating locking scripts and the accompanying unlocking data, and then transferring the unlocking data to another medium such as a metal plate.    
+
+In a more narrow sense, these hardware devices and software applications actually have the ability to support the use of multiple bitcoin “wallets”. A wallet in this more narrow sense refers to certain collections of data that software and hardware wallets rely on. Within wallets in the narrow sense have clearly delineated structures, so that one hardware or software wallet can support multiple wallets. 
+
+To illustrate, you can see the broad and narrow use of the term "wallet" in each of the following four sentences:
+
+* “Jim’s hardware wallet manages wallets for his whole family”
+* “Sarah is transferring her bitcoin wallet from the Specter to Electrum wallet”
+* “Paul created several secret wallets in his hardware wallet to hide my money from thieves” 
+* “Josh is creating a separate bitcoin wallet for his business activities in the Sparrow wallet” 
 
 In this explainer, I will use the term wallet in both the broad and the narrow sense. The meaning intended should usually be clear from the context. I will clarify when needed. 
-
 
 
 ## BIP-39 mnemonic words
