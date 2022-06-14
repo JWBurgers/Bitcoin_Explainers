@@ -4,18 +4,18 @@ In this explainer, I want to lay out the basics of how standard hardware wallets
 
 * How mnemonic words and the master seed are created via the BIP-39 standard
 * How a single master seed can produce many different Bitcoin private and public keys via the BIP-32 standard.
-* How legacy, P2SH, native segwit, and multisig addresses are created in hardware wal-lets using industry standards.  
+* How legacy, P2SH, native segwit, and multisig addresses are created in hardware wallets using industry standards.  
 
-Hardware wallets are not rocket science. Knowing the details of how they work will help you keep your funds save, and also provide a basis for exploring more advanced techniques (includ-ing their pitfals) such as multisignature wallets.
+Hardware wallets are not rocket science. Knowing the details of how they work will help you keep your funds save, and also provide a basis for exploring more advanced techniques (including their pitfals) such as multisignature wallets.
 
 
 ## A note on terminology
 
 There is a lot of terminology that you should know when working with Bitcoin, particularly when it comes to hardware wallets. I’ll introduce that terminology as we move along. Here, I just want to start with a short note on the term “wallet”. 
 
-The term “wallet” can have at least two distinct meanings in the Bitcoin ecosystem. In a broad sense, it can refer to a hardware wallet such as a Trezor or a Cold Card, or a software applica-tion such as Specter, Sparrow, or Electrum. In a more narrow sense, these hardware devices and software applications actually have the ability to support the use of multiple bitcoin “wal-lets”. 
+The term “wallet” can have at least two distinct meanings in the Bitcoin ecosystem. In a broad sense, it can refer to a hardware wallet such as a Trezor or a Cold Card, or a software application such as Specter, Sparrow, or Electrum. In a more narrow sense, these hardware devices and software applications actually have the ability to support the use of multiple bitcoin “wallets”. 
 
-A wallet in this more narrow sense refers to certain collections of data, the main functions of which are to help you create receive addresses, track your funds, and potentially sign transac-tions (depending on the type of wallet). 
+A wallet in this more narrow sense refers to certain collections of data, the main functions of which are to help you create receive addresses, track your funds, and potentially sign transactions (depending on the type of wallet). 
 
 In this explainer, I will use the term wallet in both the broad and the narrow sense. The meaning intended should usually be clear from the context. I will clarify when needed. 
 
