@@ -109,7 +109,7 @@ An **extended private key** is just any Bitcoin private key that is accompanied 
 
 The master node forms the root of the BIP-32 HD wallet. From it, you can derrive two types of child nodes and further descendants to produce a tree-like structure. For producing a normal child node from the master node, the process is as follows with the BIP-32 standard:  
 
-* You determine an index number. For normal child nodes, valid index numbers run from 0 to 2<sup>31 – 1</sup>. Any wallet typically starts with 0 and then works its way upwards.
+* You determine an index number. For normal child nodes, valid index numbers run from 0 to 2<sup>31</sup> – 1. Any wallet typically starts with 0 and then works its way upwards.
 * Take the index number, the master chain code, and the *master public key*, and plug them into the HMAC-SHA512 function. This results in a hash value of 512 bits. 
 * The last 256 bits of the hash value is the **child chain code**. 
 * The first 256 bits is added to the *master private key* modulo 2<sup>256</sup>. The result is the **child private key**. 
@@ -118,7 +118,7 @@ The master node forms the root of the BIP-32 HD wallet. From it, you can derrive
 
 For hardened child nodes, the derrivation process works as follows in BIP-32:
 
-* You determine an index number. For hardened child nodes, these run from 2<sup>31 – 1</sup> to 2<sup>32 - 1</sup>. You typically start with 0 and then work upwards.
+* You determine an index number. For hardened child nodes, these run from 2<sup>31</sup> – 1 to 2<sup>32</sup> - 1. You typically start with 2<sup>31</sup> – 1 and then work upwards.
 * Take the index number, the master chain code, and the **master private key**, and plug them into the HMAC-SHA512 function. This results in a hash value of 512 bits. 
 * The right 256 bits of this HASH are the child chain code. 
 * The left 256 bits are added to the **master private key** modulo 2<sup>256</sup>. The result is the child private key. 
