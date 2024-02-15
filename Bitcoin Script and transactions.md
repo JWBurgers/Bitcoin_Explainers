@@ -550,7 +550,8 @@ Using the schema from the previous section, we can split this raw transaction in
     - Number of witness elements (Input 1): 02
     - Length of the element: 47
     - Element: 3044022020dbcbed6125c3cdca0d99a1765ae7308675662b93a5faadddf99c16f7b43b95022016cf9d1525d194411995615ee914a5db981e1f69b25b93aaac335078748e951901
-    - Length of the element: 026b77118b2044cd77f8c7913dde71ccbe58438537a068a5079eac3b6888a74bc5
+    - Length of the element: 33
+    - Element: 026b77118b2044cd77f8c7913dde71ccbe58438537a068a5079eac3b6888a74bc5
     - Number of witness elements (Input 2): 00
 9. **Locktime**: 00000000
 
